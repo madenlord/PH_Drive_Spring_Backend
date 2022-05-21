@@ -38,7 +38,7 @@ public class FileController {
 				"\"").body(file);
 	}
 	
-	@PostMapping("/{path:.+}")
+	@PostMapping("/{path}")
 	@ResponseBody
 	public String handleFileUpload(@RequestParam("file") MultipartFile file,
 			@PathVariable String path, RedirectAttributes redirectAttributes) {
@@ -56,21 +56,21 @@ public class FileController {
 		return "redirect:/" + path;
 	}
 	
-	@DeleteMapping("/{path:.+}")
-	@ResponseBody
-	public String deleteFile(@PathVariable String path, 
-			RedirectAttributes redirectAttributes) {
-		
-		try {
-			storageService.delete(path.toString());
-			redirectAttributes.addFlashAttribute("message",
-					path + " successfully deleted!");
-		} catch (Exception e) {
-			System.out.println("The file " + path + "couldn't be deleted");
-			redirectAttributes.addFlashAttribute("message",
-					path + " could not be deleted");
-		}
-		
-		return "redirect:/" + path;
-	}
+//	@DeleteMapping("/{filename:.+}")
+//	@ResponseBody
+//	public String deleteFile(@PathVariable String filename, 
+//			RedirectAttributes redirectAttributes) {
+//		
+//		try {
+//			storageService.delete(filename.toString());
+//			redirectAttributes.addFlashAttribute("message",
+//					filename + " successfully deleted!");
+//		} catch (Exception e) {
+//			System.out.println("The file " + filename + "couldn't be deleted");
+//			redirectAttributes.addFlashAttribute("message",
+//					filename + " could not be deleted");
+//		}
+//		
+//		return "redirect:/" + filename;
+//	}
 }
