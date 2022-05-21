@@ -15,21 +15,22 @@
  */
 package com.aaron.phdrive.storage;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Random;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import com.aaron.phdrive.service.StorageFileNotFoundException;
 
 /**
  * @author Dave Syer
@@ -90,6 +91,22 @@ public class FileSystemStorageServiceTests {
 	public void savePermitted() {
 		service.store(new MockMultipartFile("foo", "bar/../foo.txt",
 				MediaType.TEXT_PLAIN_VALUE, "Hello, World".getBytes()));
+	}
+	
+	@Test
+	public void deleteExistent() {
+		String filename = "foo.txt";
+		service.store(new MockMultipartFile(filename, filename, MediaType.TEXT_PLAIN_VALUE,
+				"Hello, World!".getBytes()));
+		service.delete(filename);
+		assertThat(service.load(filename)).doesNotExist();
+	}
+	
+	@Test
+	public void deleteNonExistent() {
+		assertThrows(StorageFileNotFoundException.class, () -> {
+			service.delete("foo.txt");
+		});
 	}
 
 }
