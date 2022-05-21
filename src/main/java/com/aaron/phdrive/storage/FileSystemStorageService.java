@@ -97,6 +97,11 @@ public class FileSystemStorageService implements StorageService {
 			throw new StorageFileNotFoundException("Could not read file: " + filename, e);
 		}
 	}
+	
+	@Override
+	public void deleteAll() {
+		FileSystemUtils.deleteRecursively(rootLocation.toFile());
+	}
 
 	@Override
 	public void init() {
