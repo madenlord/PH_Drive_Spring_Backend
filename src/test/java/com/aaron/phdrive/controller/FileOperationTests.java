@@ -2,6 +2,7 @@ package com.aaron.phdrive.controller;
 
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -31,6 +32,7 @@ public class FileOperationTests {
 	private final String ROOT_PATH		= "/";
 	private final String PATH			= "/rand/dir";
 	private final String GET_URL	    = "/download";
+	private final String DELETE_URL     = "/delete";
 	private final String POST_URL       = "/upload";
 	private String STORAGE_LOCATION;
 	private MockMultipartFile multipartFile;
@@ -62,8 +64,6 @@ public class FileOperationTests {
 		
 		this.mvc.perform(get(GET_URL).param("file", FILENAME))
 				.andExpect(status().isOk());
-		
-		then(this.storageService).should().loadAsResource(FILENAME);
 	}
 	
 	@Test
@@ -73,15 +73,16 @@ public class FileOperationTests {
 				.willReturn(multipartFile.getResource());
 		
 		this.mvc.perform(get(GET_URL).param("file", PATH + "/" + FILENAME))
-				.andExpect(status().isOk());
-		
-		then(this.storageService).should().loadAsResource(PATH + "/" + FILENAME);
+				.andExpect(status().isOk());	
 	}
 	
 	@Test
 	public void shouldSaveUploadedFile() throws Exception {
 		this.mvc.perform(multipart(POST_URL).file(multipartFile).param("path", ROOT_PATH))
-				.andExpect(status().is2xxSuccessful());
+				.andExpect(status().is2xxSuccessful())
+				.andExpect(content().json(
+						"{'response':'" + FILENAME + " successfully uploaded!'}"
+						));
 		
 		then(this.storageService).should().store(multipartFile, ROOT_PATH);
 	}
@@ -97,11 +98,11 @@ public class FileOperationTests {
 	
 //	@Test
 //	public void shouldDeleteFile() throws Exception {
-//		given(this.storageService.load(TEST_FILENAME))
-//			.willReturn(Paths.get(TEST_PATH + TEST_FILENAME));
+//		doNothing().when(this.storageService).delete(FILENAME);
 //		
-//		this.mvc.perform(delete(TEST_FILEPATH))
-//			.andExpect(status().is2xxSuccessful());
+//		this.mvc.perform(delete(Paths.get(DELETE_URL).resolve(FILENAME).toString()))
+//			.andExpect(status().is2xxSuccessful())
+//			.andExpect(redirectedUrl(FILENAME));
 //	}
 //	
 //	@SuppressWarnings("unchecked")

@@ -39,37 +39,37 @@ public class FileController {
 	@PostMapping("/upload")
 	@ResponseBody
 	public String handleFileUpload(@RequestParam("file") MultipartFile file,
-			@RequestParam("path") String path, RedirectAttributes redirectAttributes) {
+			@RequestParam("path") String path) {
 
+		String response = "{'response':'";
+		
 		if(path == null) path = "/";
 		try {
 			storageService.store(file, path);
-			redirectAttributes.addFlashAttribute("message",
-					file.getOriginalFilename() + " successfully uploaded!");
+			response += file.getOriginalFilename() + " successfully uploaded!'}";
 		} catch(StorageException e) {
 			System.out.println("The introduced path doesn't exist!");
-			redirectAttributes.addFlashAttribute("message", 
-					file.getOriginalFilename() + " could not be uploaded");
+			response += file.getOriginalFilename() + " could not be uploaded'}";
 		}
 		
-		return "redirect:/" + path;
+		return response;
 	}
 	
 //	@DeleteMapping("/delete")
 //	@ResponseBody
-//	public String deleteFile(@RequestParam("file") String file, 
+//	public String deleteFile(@RequestParam("file") String filepath, 
 //			RedirectAttributes redirectAttributes) {
 //		
 //		try {
-//			storageService.delete(filename.toString());
+//			storageService.delete(filepath);
 //			redirectAttributes.addFlashAttribute("message",
-//					filename + " successfully deleted!");
+//					filepath + " successfully deleted!");
 //		} catch (Exception e) {
-//			System.out.println("The file " + filename + "couldn't be deleted");
+//			System.out.println("The file " + filepath + "couldn't be deleted");
 //			redirectAttributes.addFlashAttribute("message",
-//					filename + " could not be deleted");
+//					filepath + " could not be deleted");
 //		}
 //		
-//		return "redirect:/" + filename;
+//		return "redirect:/" + filepath;
 //	}
 }
