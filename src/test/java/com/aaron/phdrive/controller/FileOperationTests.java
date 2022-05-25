@@ -1,10 +1,11 @@
 package com.aaron.phdrive.controller;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -19,6 +20,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.aaron.phdrive.service.StorageFileNotFoundException;
 import com.aaron.phdrive.service.StorageService;
 import com.aaron.phdrive.storage.StorageProperties;
 
@@ -74,6 +76,19 @@ public class FileOperationTests {
 		
 		this.mvc.perform(get(GET_URL).param("file", PATH + "/" + FILENAME))
 				.andExpect(status().isOk());	
+	}
+	
+	@Test()
+	public void shouldFailAtDownload() {
+		given(this.storageService.loadAsResource(FILENAME + "t"))
+				.willThrow(StorageFileNotFoundException.class);
+		
+		try {
+			this.mvc.perform(get(GET_URL).param("file", FILENAME + "t"))
+					.andExpect(status().is4xxClientError());
+		} catch(Exception e) {
+			assertEquals(e.getCause().getClass(), StorageFileNotFoundException.class);
+		}
 	}
 	
 	@Test
