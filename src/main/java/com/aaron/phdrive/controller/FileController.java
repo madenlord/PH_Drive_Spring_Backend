@@ -1,16 +1,19 @@
 package com.aaron.phdrive.controller;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.aaron.phdrive.service.StorageService;
@@ -26,10 +29,14 @@ public class FileController {
 		this.storageService = storageService;
 	}
 	
-	@GetMapping("/{filename:.+}")
+	@GetMapping("/download/**")
 	@ResponseBody
-	public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
-		Resource file = storageService.loadAsResource(filename);
+	public ResponseEntity<Resource> serveFile(HttpServletRequest request) {
+		String filepath = new AntPathMatcher().extractPathWithinPattern(
+				request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE).toString(),
+				request.getRequestURI());
+		System.out.println(filepath);
+		Resource file = storageService.loadAsResource(filepath);
 		return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION,
 				"attachment; filename=\"" + file.getFilename() + 
 				"\"").body(file);

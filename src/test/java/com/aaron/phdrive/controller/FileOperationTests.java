@@ -29,7 +29,8 @@ public class FileOperationTests {
 	private final String MULTIPART_NAME = "file";
 	private final String FILENAME 		= "test.txt";
 	private final String ROOT_PATH		= "/";
-	private final String PATH			= "/rand/dir";
+	private final String PATH			= "rand/dir";
+	private final String GET_URL	    = "/download";
 	private final String POST_URL       = "/upload";
 	private String STORAGE_LOCATION;
 	private MockMultipartFile multipartFile;
@@ -59,10 +60,22 @@ public class FileOperationTests {
 		given(this.storageService.loadAsResource(FILENAME))
 				.willReturn(multipartFile.getResource());
 		
-		this.mvc.perform(get("/" + FILENAME))
+		this.mvc.perform(get(GET_URL + "/" + FILENAME))
 				.andExpect(status().isOk());
 		
 		then(this.storageService).should().loadAsResource(FILENAME);
+	}
+	
+	@Test
+	@DisplayName("Should download file " + PATH + "/" + FILENAME)
+	public void shouldDownloadFileFromSpecificPath() throws Exception {
+		given(this.storageService.loadAsResource(PATH + "/" + FILENAME))
+				.willReturn(multipartFile.getResource());
+		
+		this.mvc.perform(get(GET_URL + "/" + PATH + "/" + FILENAME))
+				.andExpect(status().isOk());
+		
+		then(this.storageService).should().loadAsResource(PATH + "/" + FILENAME);
 	}
 	
 	@Test
