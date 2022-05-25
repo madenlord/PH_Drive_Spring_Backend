@@ -29,7 +29,7 @@ public class FileOperationTests {
 	private final String MULTIPART_NAME = "file";
 	private final String FILENAME 		= "test.txt";
 	private final String ROOT_PATH		= "/";
-	private final String PATH			= "rand/dir";
+	private final String PATH			= "/rand/dir";
 	private final String GET_URL	    = "/download";
 	private final String POST_URL       = "/upload";
 	private String STORAGE_LOCATION;
@@ -60,7 +60,7 @@ public class FileOperationTests {
 		given(this.storageService.loadAsResource(FILENAME))
 				.willReturn(multipartFile.getResource());
 		
-		this.mvc.perform(get(GET_URL + "/" + FILENAME))
+		this.mvc.perform(get(GET_URL).param("filename", FILENAME))
 				.andExpect(status().isOk());
 		
 		then(this.storageService).should().loadAsResource(FILENAME);
@@ -72,7 +72,7 @@ public class FileOperationTests {
 		given(this.storageService.loadAsResource(PATH + "/" + FILENAME))
 				.willReturn(multipartFile.getResource());
 		
-		this.mvc.perform(get(GET_URL + "/" + PATH + "/" + FILENAME))
+		this.mvc.perform(get(GET_URL).param("path", PATH).param("filename", FILENAME))
 				.andExpect(status().isOk());
 		
 		then(this.storageService).should().loadAsResource(PATH + "/" + FILENAME);

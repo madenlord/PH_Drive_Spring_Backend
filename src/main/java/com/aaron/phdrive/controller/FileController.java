@@ -29,14 +29,14 @@ public class FileController {
 		this.storageService = storageService;
 	}
 	
-	@GetMapping("/download/**")
+	@GetMapping("/download")
 	@ResponseBody
-	public ResponseEntity<Resource> serveFile(HttpServletRequest request) {
-		String filepath = new AntPathMatcher().extractPathWithinPattern(
-				request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE).toString(),
-				request.getRequestURI());
-		System.out.println(filepath);
-		Resource file = storageService.loadAsResource(filepath);
+	public ResponseEntity<Resource> serveFile(@RequestParam("filename") String filename,
+			@RequestParam(name="path",required=false) String path) {
+		
+		if(path != null) filename = path + "/" + filename;
+		
+		Resource file = storageService.loadAsResource(filename);
 		return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION,
 				"attachment; filename=\"" + file.getFilename() + 
 				"\"").body(file);
