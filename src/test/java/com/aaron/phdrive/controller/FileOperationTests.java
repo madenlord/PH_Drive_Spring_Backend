@@ -1,10 +1,16 @@
 package com.aaron.phdrive.controller;
 
+import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -13,9 +19,11 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.aaron.phdrive.service.StorageService;
+import com.aaron.phdrive.storage.StorageProperties;
 
 @AutoConfigureMockMvc
 @SpringBootTest
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class FileOperationTests {
 
 	private final String MULTIPART_NAME = "file";
@@ -23,17 +31,42 @@ public class FileOperationTests {
 	private final String ROOT_PATH		= "/";
 	private final String PATH			= "/rand/dir";
 	private final String POST_URL       = "/upload";
+	private String STORAGE_LOCATION;
+	private MockMultipartFile multipartFile;
 	
 	@Autowired
 	private MockMvc mvc;
 	
+	@Autowired
+	private StorageProperties storageProperties;
+	
 	@MockBean
 	private StorageService storageService;
 	
+	@BeforeAll
+	public void init() {
+		STORAGE_LOCATION = this.storageProperties.getLocation();
+	}
+	
+	@BeforeEach
+	public void initTest() {
+		multipartFile = new MockMultipartFile(MULTIPART_NAME, FILENAME,
+				"text/plain", "Spring Framework".getBytes());
+	}
+	
+	@Test
+	public void shouldDownloadFile() throws Exception {
+		given(this.storageService.loadAsResource(FILENAME))
+				.willReturn(multipartFile.getResource());
+		
+		this.mvc.perform(get("/" + FILENAME))
+				.andExpect(status().isOk());
+		
+		then(this.storageService).should().loadAsResource(FILENAME);
+	}
+	
 	@Test
 	public void shouldSaveUploadedFile() throws Exception {
-		MockMultipartFile multipartFile = new MockMultipartFile(MULTIPART_NAME, FILENAME,
-				"text/plain", "Spring Framework".getBytes());
 		this.mvc.perform(multipart(POST_URL).file(multipartFile).param("path", ROOT_PATH))
 				.andExpect(status().is2xxSuccessful());
 		
@@ -41,10 +74,8 @@ public class FileOperationTests {
 	}
 	
 	@Test
+	@DisplayName("Should upload file in path " + PATH)
 	public void shouldSaveUploadedFileInSpecificPath() throws Exception {
-		MockMultipartFile multipartFile = new MockMultipartFile(MULTIPART_NAME, FILENAME,
-				"text/plain", "Spring Framework".getBytes());
-				
 		this.mvc.perform(multipart(POST_URL).file(multipartFile).param("path", PATH))
 				.andExpect(status().is2xxSuccessful());
 		
