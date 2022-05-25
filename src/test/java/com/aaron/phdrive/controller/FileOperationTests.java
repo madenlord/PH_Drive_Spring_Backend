@@ -1,14 +1,8 @@
 package com.aaron.phdrive.controller;
 
-import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.doThrow;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import java.nio.file.Paths;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +12,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.aaron.phdrive.service.StorageFileNotFoundException;
 import com.aaron.phdrive.service.StorageService;
 
 @AutoConfigureMockMvc
@@ -27,7 +20,8 @@ public class FileOperationTests {
 
 	private final String MULTIPART_NAME = "file";
 	private final String FILENAME 		= "test.txt";
-	private final String PATH			= "/";
+	private final String ROOT_PATH		= "/";
+	private final String PATH			= "/rand/dir";
 	private final String POST_URL       = "/upload";
 	
 	@Autowired
@@ -40,6 +34,17 @@ public class FileOperationTests {
 	public void shouldSaveUploadedFile() throws Exception {
 		MockMultipartFile multipartFile = new MockMultipartFile(MULTIPART_NAME, FILENAME,
 				"text/plain", "Spring Framework".getBytes());
+		this.mvc.perform(multipart(POST_URL).file(multipartFile).param("path", ROOT_PATH))
+				.andExpect(status().is2xxSuccessful());
+		
+		then(this.storageService).should().store(multipartFile, ROOT_PATH);
+	}
+	
+	@Test
+	public void shouldSaveUploadedFileInSpecificPath() throws Exception {
+		MockMultipartFile multipartFile = new MockMultipartFile(MULTIPART_NAME, FILENAME,
+				"text/plain", "Spring Framework".getBytes());
+				
 		this.mvc.perform(multipart(POST_URL).file(multipartFile).param("path", PATH))
 				.andExpect(status().is2xxSuccessful());
 		
