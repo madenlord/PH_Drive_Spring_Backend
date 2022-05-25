@@ -60,7 +60,7 @@ public class FileOperationTests {
 		given(this.storageService.loadAsResource(FILENAME))
 				.willReturn(multipartFile.getResource());
 		
-		this.mvc.perform(get(GET_URL).param("filename", FILENAME))
+		this.mvc.perform(get(GET_URL).param("file", FILENAME))
 				.andExpect(status().isOk());
 		
 		then(this.storageService).should().loadAsResource(FILENAME);
@@ -72,7 +72,7 @@ public class FileOperationTests {
 		given(this.storageService.loadAsResource(PATH + "/" + FILENAME))
 				.willReturn(multipartFile.getResource());
 		
-		this.mvc.perform(get(GET_URL).param("path", PATH).param("filename", FILENAME))
+		this.mvc.perform(get(GET_URL).param("file", PATH + "/" + FILENAME))
 				.andExpect(status().isOk());
 		
 		then(this.storageService).should().loadAsResource(PATH + "/" + FILENAME);
