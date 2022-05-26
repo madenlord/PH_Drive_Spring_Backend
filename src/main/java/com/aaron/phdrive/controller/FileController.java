@@ -1,8 +1,5 @@
 package com.aaron.phdrive.controller;
 
-import java.io.IOException;
-import java.nio.file.Paths;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -18,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.aaron.phdrive.service.StorageService;
+import com.aaron.phdrive.storage.StorageException;
 
 @RestController
 public class FileController {
@@ -29,48 +27,48 @@ public class FileController {
 		this.storageService = storageService;
 	}
 	
-	@GetMapping("/{filename:.+}")
+	@GetMapping("/download")
 	@ResponseBody
-	public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
-		Resource file = storageService.loadAsResource(filename);
+	public ResponseEntity<Resource> serveFile(@RequestParam("file") String filepath) {
+		Resource file = storageService.loadAsResource(filepath);
 		return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION,
 				"attachment; filename=\"" + file.getFilename() + 
 				"\"").body(file);
 	}
 	
-	@PostMapping("/{path}")
+	@PostMapping("/upload")
 	@ResponseBody
 	public String handleFileUpload(@RequestParam("file") MultipartFile file,
-			@PathVariable String path, RedirectAttributes redirectAttributes) {
+			@RequestParam("path") String path) {
+
+		String response = "{'response':'";
+		
+		if(path == null) path = "/";
 		try {
-			file.transferTo(Paths.get(path));
-			storageService.store(file);
-			redirectAttributes.addFlashAttribute("message",
-					file.getOriginalFilename() + " successfully uploaded!");
-		} catch(IOException e) {
+			storageService.store(file, path);
+			response += file.getOriginalFilename() + " successfully uploaded!'}";
+		} catch(StorageException e) {
 			System.out.println("The introduced path doesn't exist!");
-			redirectAttributes.addFlashAttribute("message", 
-					file.getOriginalFilename() + " could not be uploaded");
+			response += file.getOriginalFilename() + " could not be uploaded'}";
 		}
 		
-		return "redirect:/" + path;
+		return response;
 	}
 	
-//	@DeleteMapping("/{filename:.+}")
-//	@ResponseBody
-//	public String deleteFile(@PathVariable String filename, 
-//			RedirectAttributes redirectAttributes) {
-//		
-//		try {
-//			storageService.delete(filename.toString());
-//			redirectAttributes.addFlashAttribute("message",
-//					filename + " successfully deleted!");
-//		} catch (Exception e) {
-//			System.out.println("The file " + filename + "couldn't be deleted");
-//			redirectAttributes.addFlashAttribute("message",
-//					filename + " could not be deleted");
-//		}
-//		
-//		return "redirect:/" + filename;
-//	}
+	@DeleteMapping("/delete")
+	@ResponseBody
+	public String deleteFile(@RequestParam("file") String filepath) {
+		
+		String response = "{'response':'";
+		
+		try {
+			storageService.delete(filepath);
+			response += filepath + " successfully deleted!'}";
+		} catch (Exception e) {
+			System.out.println("The file " + filepath + "couldn't be deleted");
+			response += filepath + " could not be deleted.'}";
+		}
+		
+		return response;
+	}
 }

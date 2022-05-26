@@ -24,6 +24,7 @@ import java.nio.file.Paths;
 import java.util.Random;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
@@ -40,6 +41,9 @@ public class FileSystemStorageServiceTests {
 
 	private StorageProperties properties = new StorageProperties();
 	private FileSystemStorageService service;
+	
+	private final String MULTIPARTFILE_NAME = "foo";
+	private final String FILE_PATH = "";
 
 	@BeforeEach
 	public void init() {
@@ -55,24 +59,24 @@ public class FileSystemStorageServiceTests {
 
 	@Test
 	public void saveAndLoad() {
-		service.store(new MockMultipartFile("foo", "foo.txt", MediaType.TEXT_PLAIN_VALUE,
-				"Hello, World".getBytes()));
+		service.store(new MockMultipartFile(MULTIPARTFILE_NAME, "foo.txt", MediaType.TEXT_PLAIN_VALUE,
+				"Hello, World".getBytes()), FILE_PATH);
 		assertThat(service.load("foo.txt")).exists();
 	}
 
 	@Test
 	public void saveRelativePathNotPermitted() {
 		assertThrows(StorageException.class, () -> {
-			service.store(new MockMultipartFile("foo", "../foo.txt",
-					MediaType.TEXT_PLAIN_VALUE, "Hello, World".getBytes()));
+			service.store(new MockMultipartFile(MULTIPARTFILE_NAME, "../foo.txt",
+					MediaType.TEXT_PLAIN_VALUE, "Hello, World".getBytes()), FILE_PATH);
 		});
 	}
 
 	@Test
 	public void saveAbsolutePathNotPermitted() {
 		assertThrows(StorageException.class, () -> {
-			service.store(new MockMultipartFile("foo", "/etc/passwd",
-					MediaType.TEXT_PLAIN_VALUE, "Hello, World".getBytes()));
+			service.store(new MockMultipartFile(MULTIPARTFILE_NAME, "/etc/passwd",
+					MediaType.TEXT_PLAIN_VALUE, "Hello, World".getBytes()), FILE_PATH);
 		});
 	}
 
@@ -82,22 +86,30 @@ public class FileSystemStorageServiceTests {
 		//Unix file systems (e.g. ext4) allows backslash '\' in file names.
 		String fileName="\\etc\\passwd";
 		service.store(new MockMultipartFile(fileName, fileName,
-				MediaType.TEXT_PLAIN_VALUE, "Hello, World".getBytes()));
+				MediaType.TEXT_PLAIN_VALUE, "Hello, World".getBytes()), FILE_PATH);
 		assertTrue(Files.exists(
 				Paths.get(properties.getLocation()).resolve(Paths.get(fileName))));
 	}
 
 	@Test
 	public void savePermitted() {
-		service.store(new MockMultipartFile("foo", "bar/../foo.txt",
-				MediaType.TEXT_PLAIN_VALUE, "Hello, World".getBytes()));
+		service.store(new MockMultipartFile(MULTIPARTFILE_NAME, "bar/../foo.txt",
+				MediaType.TEXT_PLAIN_VALUE, "Hello, World".getBytes()), FILE_PATH);
+	}
+	
+	@Test
+	@DisplayName("Saving empty file should throw StorageException")
+	public void saveEmptyFile() {
+		assertThrows(StorageException.class, () -> service.store(
+				new MockMultipartFile(MULTIPARTFILE_NAME, "foo.txt",
+				MediaType.TEXT_PLAIN_VALUE, "".getBytes()), FILE_PATH));
 	}
 	
 	@Test
 	public void deleteExistent() {
 		String filename = "foo.txt";
 		service.store(new MockMultipartFile(filename, filename, MediaType.TEXT_PLAIN_VALUE,
-				"Hello, World!".getBytes()));
+				"Hello, World!".getBytes()), FILE_PATH);
 		service.delete(filename);
 		assertThat(service.load(filename)).doesNotExist();
 	}
