@@ -24,6 +24,7 @@ import java.nio.file.Paths;
 import java.util.Random;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
@@ -94,6 +95,14 @@ public class FileSystemStorageServiceTests {
 	public void savePermitted() {
 		service.store(new MockMultipartFile(MULTIPARTFILE_NAME, "bar/../foo.txt",
 				MediaType.TEXT_PLAIN_VALUE, "Hello, World".getBytes()), FILE_PATH);
+	}
+	
+	@Test
+	@DisplayName("Saving empty file should throw StorageException")
+	public void saveEmptyFile() {
+		assertThrows(StorageException.class, () -> service.store(
+				new MockMultipartFile(MULTIPARTFILE_NAME, "foo.txt",
+				MediaType.TEXT_PLAIN_VALUE, "".getBytes()), FILE_PATH));
 	}
 	
 	@Test
