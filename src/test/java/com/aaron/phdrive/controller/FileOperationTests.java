@@ -4,14 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import java.nio.file.Paths;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -124,6 +122,22 @@ public class FileOperationTests {
 			.andExpect(status().is2xxSuccessful())
 			.andExpect(content().json(
 					"{'response':'" + FILENAME + " successfully deleted!'}"));
+	}
+	
+	@Test
+	@DisplayName("Should throw StorageFileNotFoundException when deleting non-existing file")
+	public void shouldFailAtDeletingNonExistingFile() {
+		doThrow(StorageFileNotFoundException.class).when(this.storageService).delete(FILENAME);
+		
+		try  {
+			this.mvc.perform(delete(DELETE_URL).param("file", FILENAME))
+			.andExpect(status().is2xxSuccessful())
+			.andExpect(content().json(
+					"{'response':'" + FILENAME + " could not be deleted.'}"));
+		} catch(Exception e) {
+			assertEquals(e.getCause().getClass(), StorageFileNotFoundException.class);
+		}
+		
 	}
 	
 //	@SuppressWarnings("unchecked")
