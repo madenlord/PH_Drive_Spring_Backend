@@ -3,10 +3,15 @@ package com.aaron.phdrive.controller;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.doNothing;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.nio.file.Paths;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -111,15 +116,16 @@ public class FileOperationTests {
 		then(this.storageService).should().store(multipartFile, PATH);
 	}
 	
-//	@Test
-//	public void shouldDeleteFile() throws Exception {
-//		doNothing().when(this.storageService).delete(FILENAME);
-//		
-//		this.mvc.perform(delete(Paths.get(DELETE_URL).resolve(FILENAME).toString()))
-//			.andExpect(status().is2xxSuccessful())
-//			.andExpect(redirectedUrl(FILENAME));
-//	}
-//	
+	@Test
+	public void shouldDeleteFile() throws Exception {
+		doNothing().when(this.storageService).delete(FILENAME);
+		
+		this.mvc.perform(delete(DELETE_URL).param("file", FILENAME))
+			.andExpect(status().is2xxSuccessful())
+			.andExpect(content().json(
+					"{'response':'" + FILENAME + " successfully deleted!'}"));
+	}
+	
 //	@SuppressWarnings("unchecked")
 //	@Test
 //	public void should404WhenMissingFile() throws Exception {

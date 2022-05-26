@@ -55,21 +55,20 @@ public class FileController {
 		return response;
 	}
 	
-//	@DeleteMapping("/delete")
-//	@ResponseBody
-//	public String deleteFile(@RequestParam("file") String filepath, 
-//			RedirectAttributes redirectAttributes) {
-//		
-//		try {
-//			storageService.delete(filepath);
-//			redirectAttributes.addFlashAttribute("message",
-//					filepath + " successfully deleted!");
-//		} catch (Exception e) {
-//			System.out.println("The file " + filepath + "couldn't be deleted");
-//			redirectAttributes.addFlashAttribute("message",
-//					filepath + " could not be deleted");
-//		}
-//		
-//		return "redirect:/" + filepath;
-//	}
+	@DeleteMapping("/delete")
+	@ResponseBody
+	public String deleteFile(@RequestParam("file") String filepath) {
+		
+		String response = "{'response':'";
+		
+		try {
+			storageService.delete(filepath);
+			response += filepath + " successfully deleted!'}";
+		} catch (Exception e) {
+			System.out.println("The file " + filepath + "couldn't be deleted");
+			response += filepath + " could not be deleted.'}";
+		}
+		
+		return response;
+	}
 }
