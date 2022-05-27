@@ -10,11 +10,15 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.aaron.phdrive.entity.FolderEntity;
 import com.aaron.phdrive.service.NavigationService;
 
 @Service
@@ -61,11 +65,21 @@ public class FileSystemNavigationService implements NavigationService {
 	}
 	
 	@Override
-	public void getFolderContent(String folderPath) {}
-	
-	private void getFiles(String folderPath) {}
-	
-	private void getFolders(String folderPath) {}
+	public FolderEntity getFolderContent(String folderPath) {
+		FolderEntity folder = new FolderEntity();
+		Path path = this.load(folderPath);
+		
+		try(Stream<Path> folderContent = Files.walk(path)) {
+			folderContent.forEach(element -> {
+				if(Files.isRegularFile(element)) folder.addFile(element);
+				else if(!(path.equals(element)))folder.addDir(element);
+			});
+		} catch(IOException e) {
+			throw new StorageException("Failed to get folder content.");
+		}
+		
+		return folder;
+	}
 	
 	@Override
 	public Path load(String folderPath) {

@@ -2,25 +2,36 @@ package com.aaron.phdrive.storage;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.doThrow;
 
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
+
+import com.aaron.phdrive.entity.FolderEntity;
 
 public class FileSystemNavigationServiceTests {
 
 	private StorageProperties properties = new StorageProperties();
 	private FileSystemNavigationService service;
+	private FileSystemStorageService storageService;
 	
-	private final String DIR_PATH = "randDir";
+	private final String DIR_PATH    = "randDir/";
+	private final String SUBDIR_PATH = "randDir/dir";
+	private final String FILE_PATH   = "randDir/test.txt";
+	private final String FILE_NAME   = "test.txt";
 	
 	@BeforeEach
 	public void init() {
 		this.properties.setLocation("target/dirs/" + Math.abs(new Random().nextLong()));
-		this.service = new FileSystemNavigationService(properties);
+		this.service        = new FileSystemNavigationService(properties);
+		this.storageService = new FileSystemStorageService(properties);
 		this.service.init();
 	}
 	
@@ -38,8 +49,28 @@ public class FileSystemNavigationServiceTests {
 		try {
 			this.service.createFolder(DIR_PATH);
 		} catch(Exception e) {
-			assertEquals(e.getClass(), StorageException.class);
-			assertEquals(e.getMessage(), "Folder already exists.");
+			assertEquals(StorageException.class, e.getClass());
+			assertEquals("Folder already exists.", e.getMessage());
 		}
+	}
+	
+	@Test
+	public void shouldGetFolderContent() {
+		FolderEntity folderContent;
+		List<Path> dirs  = new ArrayList<>();
+		List<Path> files = new ArrayList<>();
+		
+		this.service.createFolder(DIR_PATH);
+		this.service.createFolder(SUBDIR_PATH);
+		this.storageService.store(new MockMultipartFile("file", FILE_NAME,
+				MediaType.TEXT_PLAIN_VALUE, "Hello, World!".getBytes()), DIR_PATH);
+
+		dirs.add(this.service.load(SUBDIR_PATH));
+		files.add(this.service.load(FILE_PATH));
+		
+		folderContent = this.service.getFolderContent(DIR_PATH);
+		
+		assertEquals(dirs, folderContent.getDirs());
+		assertEquals(files, folderContent.getFiles());
 	}
 }

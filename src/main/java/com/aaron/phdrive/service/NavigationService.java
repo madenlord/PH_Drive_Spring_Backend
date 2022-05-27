@@ -3,6 +3,8 @@ package com.aaron.phdrive.service;
 import java.io.File;
 import java.nio.file.Path;
 
+import com.aaron.phdrive.entity.FolderEntity;
+
 public interface NavigationService {
 	
 	void init();
@@ -11,7 +13,7 @@ public interface NavigationService {
 	
 	File getFolder(String folderPath);
 	
-	void getFolderContent(String folderPath);
+	FolderEntity getFolderContent(String folderPath);
 	
 	Path load(String folderPath);
 	
