@@ -2,6 +2,7 @@ package com.aaron.phdrive.storage;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -15,6 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 
 import com.aaron.phdrive.entity.FolderEntity;
+import com.aaron.phdrive.service.StorageFileNotFoundException;
 
 public class FileSystemNavigationServiceTests {
 
@@ -50,7 +52,7 @@ public class FileSystemNavigationServiceTests {
 			this.service.createFolder(DIR_PATH);
 		} catch(Exception e) {
 			assertEquals(StorageException.class, e.getClass());
-			assertEquals("Folder already exists.", e.getMessage());
+			assertEquals("Folder " + DIR_PATH + " already exists.", e.getMessage());
 		}
 	}
 	
@@ -98,5 +100,26 @@ public class FileSystemNavigationServiceTests {
 			assertEquals(StorageException.class, e.getClass());
 			assertEquals("Folder " + DIR_PATH + "/error" + "doesn't exist.", e.getMessage());
 		}
+	}
+	
+	@Test
+	public void shouldDeleteFolder() {
+		this.service.createFolder(DIR_PATH);
+		this.service.createFolder(SUBDIR_PATH);
+		assertEquals(true, this.service.deleteFolder(SUBDIR_PATH));
+	}
+	
+	@Test
+	public void shouldDeleteFolderRecursively() {
+		this.service.createFolder(DIR_PATH);
+		this.service.createFolder(SUBDIR_PATH);
+		assertEquals(true, this.service.deleteFolder(DIR_PATH));
+	}
+	
+	@Test
+	@DisplayName("Delete folder that doesn't exist")
+	public void shouldFailDeletingNonExistingFolder() {
+		assertThrows(StorageFileNotFoundException.class, () -> 
+			this.service.deleteFolder(DIR_PATH));
 	}
 }

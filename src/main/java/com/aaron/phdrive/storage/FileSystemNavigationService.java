@@ -10,16 +10,16 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.FileSystemUtils;
 
 import com.aaron.phdrive.entity.FolderEntity;
 import com.aaron.phdrive.service.NavigationService;
+import com.aaron.phdrive.service.StorageFileNotFoundException;
 
 @Service
 public class FileSystemNavigationService implements NavigationService {
@@ -53,9 +53,9 @@ public class FileSystemNavigationService implements NavigationService {
 			Path folderAbsPath = this.load(folderPath);
 			Files.createDirectory(this.load(folderPath));
 		} catch(FileAlreadyExistsException e) {
-			throw new StorageException("Folder already exists.");
+			throw new StorageException("Folder " + folderPath + " already exists.");
 		} catch(IOException e) {
-			throw new StorageException("Failed to create folder.");
+			throw new StorageException("Failed to create folder " + folderPath + ".");
 		} 
 	}
 	
@@ -86,5 +86,19 @@ public class FileSystemNavigationService implements NavigationService {
 	}
 	
 	@Override
-	public void deleteFolder(String folderPath) {}
+	public boolean deleteFolder(String folderPath) {
+		boolean result = false;
+		
+		try {
+			result = FileSystemUtils.deleteRecursively(this.load(folderPath));
+		
+			if(result == false) {
+				throw new StorageFileNotFoundException(folderPath + " doesn't exist.");
+			}
+		} catch(IOException e) {
+			throw new StorageException("Failed to delete " + folderPath + " recursively.");
+		}
+		
+		return result;
+	}
 }

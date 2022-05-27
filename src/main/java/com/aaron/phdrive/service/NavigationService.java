@@ -17,5 +17,5 @@ public interface NavigationService {
 	
 	Path load(String folderPath);
 	
-	void deleteFolder(String folderPath);
+	boolean deleteFolder(String folderPath);
 }
