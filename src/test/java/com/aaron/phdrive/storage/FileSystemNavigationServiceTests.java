@@ -73,4 +73,15 @@ public class FileSystemNavigationServiceTests {
 		assertEquals(dirs, folderContent.getDirs());
 		assertEquals(files, folderContent.getFiles());
 	}
+	
+	@Test
+	@DisplayName("Fail at getting content from non-existing folder.")
+	public void shouldFailtAtGetFolderContentFormNonExistingFolder() {
+		try {
+			FolderEntity folderContent = this.service.getFolderContent(DIR_PATH + "/error");	
+		} catch(Exception e) {
+			assertEquals(StorageException.class, e.getClass());
+			assertEquals("Folder " + DIR_PATH + "/error" + "doesn't exist.", e.getMessage());
+		}
+	}
 }
