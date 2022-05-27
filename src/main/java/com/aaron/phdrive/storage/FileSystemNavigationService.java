@@ -65,8 +65,7 @@ public class FileSystemNavigationService implements NavigationService {
 	}
 	
 	@Override
-	public FolderEntity getFolderContent(String folderPath) {
-		FolderEntity folder = new FolderEntity();
+	public FolderEntity getFolderContent(String folderPath, FolderEntity folder) {
 		Path path = this.load(folderPath);
 		
 		try(Stream<Path> folderContent = Files.walk(path)) {

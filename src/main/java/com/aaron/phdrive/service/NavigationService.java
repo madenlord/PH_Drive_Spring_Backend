@@ -13,7 +13,7 @@ public interface NavigationService {
 	
 	File getFolder(String folderPath);
 	
-	FolderEntity getFolderContent(String folderPath);
+	FolderEntity getFolderContent(String folderPath, FolderEntity folder);
 	
 	Path load(String folderPath);
 	

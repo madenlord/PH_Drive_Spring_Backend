@@ -56,7 +56,7 @@ public class FileSystemNavigationServiceTests {
 	
 	@Test
 	public void shouldGetFolderContent() {
-		FolderEntity folderContent;
+		FolderEntity folderContent = new FolderEntity();
 		List<Path> dirs  = new ArrayList<>();
 		List<Path> files = new ArrayList<>();
 		
@@ -68,7 +68,7 @@ public class FileSystemNavigationServiceTests {
 		dirs.add(this.service.load(SUBDIR_PATH));
 		files.add(this.service.load(FILE_PATH));
 		
-		folderContent = this.service.getFolderContent(DIR_PATH);
+		folderContent = this.service.getFolderContent(DIR_PATH, folderContent);
 		
 		assertEquals(dirs, folderContent.getDirs());
 		assertEquals(files, folderContent.getFiles());
@@ -76,14 +76,14 @@ public class FileSystemNavigationServiceTests {
 	
 	@Test
 	public void shouldGetEmptyFolderContent() {
-		FolderEntity folderContent;
+		FolderEntity folderContent = new FolderEntity();
 		List<Path> dirs  = new ArrayList<>();
 		List<Path> files = new ArrayList<>();
 		
 		this.service.createFolder(DIR_PATH);
 		this.service.createFolder(SUBDIR_PATH);
 		
-		folderContent = this.service.getFolderContent(SUBDIR_PATH);
+		folderContent = this.service.getFolderContent(SUBDIR_PATH, folderContent);
 		
 		assertEquals(dirs, folderContent.getDirs());
 		assertEquals(files, folderContent.getFiles());
@@ -93,7 +93,7 @@ public class FileSystemNavigationServiceTests {
 	@DisplayName("Fail at getting content from non-existing folder.")
 	public void shouldFailtAtGetFolderContentFormNonExistingFolder() {
 		try {
-			FolderEntity folderContent = this.service.getFolderContent(DIR_PATH + "/error");	
+			FolderEntity folderContent = this.service.getFolderContent(DIR_PATH + "/error", new FolderEntity());	
 		} catch(Exception e) {
 			assertEquals(StorageException.class, e.getClass());
 			assertEquals("Folder " + DIR_PATH + "/error" + "doesn't exist.", e.getMessage());
