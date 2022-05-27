@@ -65,30 +65,11 @@ public class FileSystemStorageServiceTests {
 	}
 
 	@Test
-	public void saveRelativePathNotPermitted() {
-		assertThrows(StorageException.class, () -> {
-			service.store(new MockMultipartFile(MULTIPARTFILE_NAME, "../foo.txt",
-					MediaType.TEXT_PLAIN_VALUE, "Hello, World".getBytes()), FILE_PATH);
-		});
-	}
-
-	@Test
 	public void saveAbsolutePathNotPermitted() {
 		assertThrows(StorageException.class, () -> {
 			service.store(new MockMultipartFile(MULTIPARTFILE_NAME, "/etc/passwd",
 					MediaType.TEXT_PLAIN_VALUE, "Hello, World".getBytes()), FILE_PATH);
 		});
-	}
-
-	@Test
-	@EnabledOnOs({OS.LINUX})
-	public void saveAbsolutePathInFilenamePermitted() {
-		//Unix file systems (e.g. ext4) allows backslash '\' in file names.
-		String fileName="\\etc\\passwd";
-		service.store(new MockMultipartFile(fileName, fileName,
-				MediaType.TEXT_PLAIN_VALUE, "Hello, World".getBytes()), FILE_PATH);
-		assertTrue(Files.exists(
-				Paths.get(properties.getLocation()).resolve(Paths.get(fileName))));
 	}
 
 	@Test
