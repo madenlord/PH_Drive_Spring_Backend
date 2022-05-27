@@ -75,6 +75,21 @@ public class FileSystemNavigationServiceTests {
 	}
 	
 	@Test
+	public void shouldGetEmptyFolderContent() {
+		FolderEntity folderContent;
+		List<Path> dirs  = new ArrayList<>();
+		List<Path> files = new ArrayList<>();
+		
+		this.service.createFolder(DIR_PATH);
+		this.service.createFolder(SUBDIR_PATH);
+		
+		folderContent = this.service.getFolderContent(SUBDIR_PATH);
+		
+		assertEquals(dirs, folderContent.getDirs());
+		assertEquals(files, folderContent.getFiles());
+	}
+	
+	@Test
 	@DisplayName("Fail at getting content from non-existing folder.")
 	public void shouldFailtAtGetFolderContentFormNonExistingFolder() {
 		try {
