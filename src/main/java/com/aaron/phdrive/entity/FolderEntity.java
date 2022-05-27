@@ -5,9 +5,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.Entity;
-
-@Entity
 public class FolderEntity implements Serializable {
 
 	private List<Path> dirs = new ArrayList<>();
