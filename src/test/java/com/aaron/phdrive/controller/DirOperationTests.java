@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -29,6 +30,7 @@ import com.aaron.phdrive.entity.FolderEntity;
 import com.aaron.phdrive.service.NavigationService;
 import com.aaron.phdrive.service.StorageFileNotFoundException;
 import com.aaron.phdrive.service.StorageService;
+import com.aaron.phdrive.storage.StorageException;
 import com.aaron.phdrive.storage.StorageProperties;
 
 @AutoConfigureMockMvc
@@ -120,5 +122,18 @@ public class DirOperationTests {
 		assertEquals("application/json", result.getResponse().getContentType());
 		assertEquals("{'response':'Folder "+SUBDIR_PATH+" was created!'}", 
 					result.getResponse().getContentAsString());
+	}
+	
+	@Test
+	public void shouldFailtAtCreatingExistingFolder() {
+		doThrow(StorageException.class).when(this.navigationService).createFolder(SUBDIR_PATH);
+		
+		try {
+			this.mvc.perform(post(POST_URL).param("path", SUBDIR_PATH))
+					.andExpect(status().isOk());
+		} catch(Exception e) {
+			assertEquals(StorageException.class, e.getCause().getClass());
+			assertEquals("Folder " + SUBDIR_PATH + " already exists", e.getMessage());
+		}
 	}
 }
