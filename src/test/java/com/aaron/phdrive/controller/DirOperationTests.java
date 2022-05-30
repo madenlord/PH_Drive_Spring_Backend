@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.mockito.ArgumentMatchers;
@@ -24,6 +25,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import com.aaron.phdrive.entity.FolderEntity;
 import com.aaron.phdrive.service.NavigationService;
+import com.aaron.phdrive.service.StorageFileNotFoundException;
 import com.aaron.phdrive.service.StorageService;
 import com.aaron.phdrive.storage.StorageProperties;
 
@@ -89,5 +91,20 @@ public class DirOperationTests {
 				.andReturn();
 		
 		assertEquals("application/json", result.getResponse().getContentType());
+	}
+	
+	@Test
+	@DisplayName("Should fail when GET folder content operation against non-existing folder")
+	public void shouldFailAtGettingNonExistingFolderContent() {
+		given(this.navigationService.getFolderContent(eq(DIR_PATH+"error"), ArgumentMatchers.any(FolderEntity.class)))
+			.willThrow(StorageFileNotFoundException.class);
+		
+		try {
+			this.mvc.perform(get(GET_URL).param("path", DIR_PATH+"error"))
+					.andExpect(status().is5xxServerError());
+		} catch(Exception e) {
+			assertEquals(StorageFileNotFoundException.class, e.getCause().getClass());
+		}
+			
 	}
 }

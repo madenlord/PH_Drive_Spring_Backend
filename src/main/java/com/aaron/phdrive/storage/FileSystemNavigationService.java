@@ -74,7 +74,7 @@ public class FileSystemNavigationService implements NavigationService {
 				else if(!(path.equals(element)))folder.addDir(element);
 			});
 		} catch(IOException e) {
-			throw new StorageException("Folder " + folderPath + "doesn't exist.");
+			throw new StorageFileNotFoundException("Folder " + folderPath + "doesn't exist.");
 		}
 		
 		return folder;

@@ -97,7 +97,7 @@ public class FileSystemNavigationServiceTests {
 		try {
 			FolderEntity folderContent = this.service.getFolderContent(DIR_PATH + "/error", new FolderEntity());	
 		} catch(Exception e) {
-			assertEquals(StorageException.class, e.getClass());
+			assertEquals(StorageFileNotFoundException.class, e.getClass());
 			assertEquals("Folder " + DIR_PATH + "/error" + "doesn't exist.", e.getMessage());
 		}
 	}
