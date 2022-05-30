@@ -3,7 +3,9 @@ package com.aaron.phdrive.controller;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doNothing;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.nio.file.Path;
@@ -104,7 +106,19 @@ public class DirOperationTests {
 					.andExpect(status().is5xxServerError());
 		} catch(Exception e) {
 			assertEquals(StorageFileNotFoundException.class, e.getCause().getClass());
-		}
-			
+		}		
+	}
+	
+	@Test
+	public void shouldCreateFolder() throws Exception {
+		doNothing().when(this.navigationService).createFolder(SUBDIR_PATH);
+		
+		MvcResult result = this.mvc.perform(post(POST_URL).param("path", SUBDIR_PATH))
+				.andExpect(status().isOk())
+				.andReturn();
+		
+		assertEquals("application/json", result.getResponse().getContentType());
+		assertEquals("{'response':'Folder "+SUBDIR_PATH+" was created!'}", 
+					result.getResponse().getContentAsString());
 	}
 }
