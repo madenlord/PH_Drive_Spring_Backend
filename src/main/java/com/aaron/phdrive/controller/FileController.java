@@ -43,7 +43,7 @@ public class FileController {
 
 		String response = "{'response':'";
 		
-		if(path == null) path = "/";
+		if(path == null || path.isEmpty()) path = "/";
 		try {
 			storageService.store(file, path);
 			response += file.getOriginalFilename() + " successfully uploaded!'}";
