@@ -51,6 +51,7 @@ public class DirOperationTests {
 	 */
 	private final String DIR_PATH    = "randDir/";
 	private final String SUBDIR_PATH = "randDir/dir"; 
+	private final String ERROR_PATH  = "randDir/error";
 	private final String FILE_PATH   = "randDir/test.txt";
 	private final String FILE_NAME   = "test.txt";
 	
@@ -101,11 +102,11 @@ public class DirOperationTests {
 	@Test
 	@DisplayName("Should fail when GET folder content operation against non-existing folder")
 	public void shouldFailAtGettingNonExistingFolderContent() {
-		given(this.navigationService.getFolderContent(eq(DIR_PATH+"error"), ArgumentMatchers.any(FolderEntity.class)))
+		given(this.navigationService.getFolderContent(eq(ERROR_PATH), ArgumentMatchers.any(FolderEntity.class)))
 			.willThrow(StorageFileNotFoundException.class);
 		
 		try {
-			this.mvc.perform(get(GET_URL).param("path", DIR_PATH+"error"))
+			this.mvc.perform(get(GET_URL).param("path", ERROR_PATH))
 					.andExpect(status().is5xxServerError());
 		} catch(Exception e) {
 			assertEquals(StorageFileNotFoundException.class, e.getCause().getClass());
@@ -150,5 +151,33 @@ public class DirOperationTests {
 		assertEquals("application/json", result.getResponse().getContentType());
 		assertEquals("{'response':'Folder " + DIR_PATH + " was deleted!'}", 
 				result.getResponse().getContentAsString());
+	}
+	
+	@Test
+	public void shouldFailAtDeletingNonExistingFolder() {
+		given(this.navigationService.deleteFolder(ERROR_PATH))
+			.willThrow(StorageFileNotFoundException.class);
+		
+		try {
+			this.mvc.perform(delete(DELETE_URL).param("path", ERROR_PATH))
+					.andExpect(status().isOk());
+		} catch(Exception e) {
+			assertEquals(StorageFileNotFoundException.class, e.getCause().getClass());
+			assertEquals("{'response':'"+ERROR_PATH+" doesn't exist.`}", e.getMessage());
+		}
+	}
+	
+	@Test
+	public void shouldFailtAtDeletingFolderRecursively() {
+		given(this.navigationService.deleteFolder(DIR_PATH))
+			.willThrow(StorageException.class);
+		
+		try {
+			this.mvc.perform(delete(DELETE_URL).param("path", DIR_PATH))
+					.andExpect(status().isOk());
+		} catch(Exception e) {
+			assertEquals(StorageException.class, e.getCause().getClass());
+			assertEquals("{'response':'Failed to delete " + DIR_PATH + " recursively.'}", e.getMessage());
+		}
 	}
 }
