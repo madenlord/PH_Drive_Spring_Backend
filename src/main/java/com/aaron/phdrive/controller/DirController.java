@@ -1,6 +1,7 @@
 package com.aaron.phdrive.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.aaron.phdrive.entity.FolderEntity;
 import com.aaron.phdrive.service.NavigationService;
+import com.aaron.phdrive.service.StorageFileNotFoundException;
 import com.aaron.phdrive.storage.StorageException;
 
 @RestController
@@ -42,6 +44,25 @@ public class DirController {
 				response += "Folder " + folderPath + " was created!'}";
 			} catch(StorageException e) {
 				response += e.getMessage() + "'}";
+			}
+		}
+		
+		return response;
+	}
+	
+	@DeleteMapping(value="/rm", produces="application/json")
+	@ResponseBody
+	public String deleteFolder(@RequestParam("path") String folderPath) {
+		String response = "{'response':'";
+		
+		if(folderPath == null || folderPath.isEmpty())
+			response += "Can't delete folder with empty path.'}";
+		else {
+			try {
+				this.navigationService.deleteFolder(folderPath);
+				response += "Folder " + folderPath + " was deleted!'}";
+			} catch(Exception e) {
+				response += e.getMessage();
 			}
 		}
 		

@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -135,5 +136,19 @@ public class DirOperationTests {
 			assertEquals(StorageException.class, e.getCause().getClass());
 			assertEquals("Folder " + SUBDIR_PATH + " already exists", e.getMessage());
 		}
+	}
+	
+	@Test
+	public void shouldDeleteFolder() throws Exception {
+		given(this.navigationService.deleteFolder(DIR_PATH))
+			.willReturn(true);
+		
+		MvcResult result = this.mvc.perform(delete(DELETE_URL).param("path", DIR_PATH))
+					.andExpect(status().isOk())
+					.andReturn();
+		
+		assertEquals("application/json", result.getResponse().getContentType());
+		assertEquals("{'response':'Folder " + DIR_PATH + " was deleted!'}", 
+				result.getResponse().getContentAsString());
 	}
 }
