@@ -32,13 +32,20 @@ public class FileSystemStorageService implements StorageService {
 
 	@Override
 	public void store(MultipartFile file, String filepath) {
+		
 		try {
 			if (file.isEmpty()) {
 				throw new StorageException("Failed to store empty file.");
 			}
+			
+			if(filepath != "" &&
+			   filepath.charAt(filepath.length() - 1) != '/')
+				filepath += "/";
+			
 			Path destinationFile = this.rootLocation.resolve(
 					Paths.get(filepath + file.getOriginalFilename()))
 					.normalize().toAbsolutePath();
+			
 			try (InputStream inputStream = file.getInputStream()) {
 				Files.copy(inputStream, destinationFile,
 					StandardCopyOption.REPLACE_EXISTING);
