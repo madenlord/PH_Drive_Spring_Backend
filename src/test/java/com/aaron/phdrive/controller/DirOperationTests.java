@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -105,11 +106,14 @@ public class DirOperationTests {
 		given(this.navigationService.getFolderContent(eq(ERROR_PATH), ArgumentMatchers.any(FolderEntity.class)))
 			.willThrow(StorageFileNotFoundException.class);
 		
+		MvcResult result = null;
 		try {
-			this.mvc.perform(get(GET_URL).param("path", ERROR_PATH))
-					.andExpect(status().is5xxServerError());
+			result = this.mvc.perform(get(GET_URL).param("path", ERROR_PATH))
+					.andExpect(status().is4xxClientError())
+					.andReturn();
 		} catch(Exception e) {
 			assertEquals(StorageFileNotFoundException.class, e.getCause().getClass());
+			assertEquals(HttpStatus.NOT_FOUND, result.getResponse().getStatus());
 		}		
 	}
 	
@@ -122,21 +126,51 @@ public class DirOperationTests {
 				.andReturn();
 		
 		assertEquals("application/json", result.getResponse().getContentType());
-		assertEquals("{'response':'Folder "+SUBDIR_PATH+" was created!'}", 
-					result.getResponse().getContentAsString());
+		assertEquals("{\"dirs\":[],\"files\":[]}", result.getResponse().getContentAsString());
 	}
 	
 	@Test
 	public void shouldFailtAtCreatingExistingFolder() {
-		doThrow(StorageException.class).when(this.navigationService).createFolder(SUBDIR_PATH);
+		doThrow(new StorageException("Folder " + SUBDIR_PATH + " already exists."))
+				.when(this.navigationService).createFolder(SUBDIR_PATH);
 		
+		MvcResult result = null;
 		try {
-			this.mvc.perform(post(POST_URL).param("path", SUBDIR_PATH))
-					.andExpect(status().isOk());
+			result = this.mvc.perform(post(POST_URL).param("path", SUBDIR_PATH))
+							  .andExpect(status().is4xxClientError())
+							  .andReturn();
 		} catch(Exception e) {
 			assertEquals(StorageException.class, e.getCause().getClass());
 			assertEquals("Folder " + SUBDIR_PATH + " already exists", e.getMessage());
+			assertEquals(HttpStatus.CONFLICT, result.getResponse().getStatus());
 		}
+	}
+	
+	@Test
+	public void shouldFailAtCreatingFolder() {
+		doThrow(new StorageException("Failed to create folder " + SUBDIR_PATH + "."))
+				.when(this.navigationService).createFolder(SUBDIR_PATH);
+
+		MvcResult result = null;
+		try {
+			result = this.mvc.perform(post(POST_URL).param("path", SUBDIR_PATH))
+							  .andExpect(status().is5xxServerError())
+							  .andReturn();
+		} catch(Exception e) {
+			assertEquals(StorageException.class, e.getCause().getClass());
+			assertEquals("Failed to create folder " + SUBDIR_PATH + ".", e.getMessage());
+			assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getResponse().getStatus());
+		}
+	}
+	
+	@Test
+	@DisplayName("Should fail when creating folder with empty path.")
+	public void shouldFailtAtCreatingEmptyFolder() throws Exception {
+		MvcResult result = this.mvc.perform(post(POST_URL).param("path", ""))
+								   .andExpect(status().is4xxClientError())
+								   .andReturn();
+		
+		assertEquals(406, result.getResponse().getStatus());
 	}
 	
 	@Test
@@ -147,10 +181,6 @@ public class DirOperationTests {
 		MvcResult result = this.mvc.perform(delete(DELETE_URL).param("path", DIR_PATH))
 					.andExpect(status().isOk())
 					.andReturn();
-		
-		assertEquals("application/json", result.getResponse().getContentType());
-		assertEquals("{'response':'Folder " + DIR_PATH + " was deleted!'}", 
-				result.getResponse().getContentAsString());
 	}
 	
 	@Test
@@ -158,12 +188,15 @@ public class DirOperationTests {
 		given(this.navigationService.deleteFolder(ERROR_PATH))
 			.willThrow(StorageFileNotFoundException.class);
 		
+		MvcResult result = null;
 		try {
-			this.mvc.perform(delete(DELETE_URL).param("path", ERROR_PATH))
-					.andExpect(status().isOk());
+			result = this.mvc.perform(delete(DELETE_URL).param("path", ERROR_PATH))
+						     .andExpect(status().is4xxClientError())
+						     .andReturn();
 		} catch(Exception e) {
 			assertEquals(StorageFileNotFoundException.class, e.getCause().getClass());
-			assertEquals("{'response':'"+ERROR_PATH+" doesn't exist.`}", e.getMessage());
+			assertEquals(ERROR_PATH + " doesn't exist.", e.getMessage());
+			assertEquals(HttpStatus.NOT_FOUND, result.getResponse().getStatus());
 		}
 	}
 	
@@ -172,12 +205,15 @@ public class DirOperationTests {
 		given(this.navigationService.deleteFolder(DIR_PATH))
 			.willThrow(StorageException.class);
 		
+		MvcResult result = null;
 		try {
-			this.mvc.perform(delete(DELETE_URL).param("path", DIR_PATH))
-					.andExpect(status().isOk());
+			result = this.mvc.perform(delete(DELETE_URL).param("path", DIR_PATH))
+						     .andExpect(status().is5xxServerError())
+						     .andReturn();
 		} catch(Exception e) {
 			assertEquals(StorageException.class, e.getCause().getClass());
-			assertEquals("{'response':'Failed to delete " + DIR_PATH + " recursively.'}", e.getMessage());
+			assertEquals("Failed to delete " + DIR_PATH + " recursively.", e.getMessage());
+			assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getResponse().getStatus());
 		}
 	}
 }

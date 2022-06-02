@@ -1,6 +1,9 @@
 package com.aaron.phdrive.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,47 +28,55 @@ public class DirController {
 	
 	@GetMapping("/dir")
 	@ResponseBody
-	public FolderEntity getFolderContent(@RequestParam("path") String folderPath) {
+	public ResponseEntity<FolderEntity> getFolderContent(@RequestParam("path") String folderPath) {
+		
+		FolderEntity folderInfo = new FolderEntity();
+		
 		if(folderPath == null || folderPath.isEmpty()) folderPath = "/";
-		return this.navigationService.getFolderContent(folderPath, new FolderEntity());
+		try {
+			folderInfo = this.navigationService.getFolderContent(folderPath, folderInfo);
+			return ResponseEntity.ok().header(HttpHeaders.CONTENT_TYPE, "application/json")
+									  .body(folderInfo);
+		} catch(StorageFileNotFoundException e) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
 	}
 	
 	@PostMapping(value="/mkdir", produces="application/json")
 	@ResponseBody
-	public String createFolder(@RequestParam("path") String folderPath) {
-		
-		String response = "{'response':'";
+	public ResponseEntity<FolderEntity> createFolder(@RequestParam("path") String folderPath) {
 		
 		if(folderPath == null || folderPath.isEmpty()) 
-			response += "Can't create folder with empty path.'}";
+			return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
 		else {
 			try {
 				this.navigationService.createFolder(folderPath);
-				response += "Folder " + folderPath + " was created!'}";
+				return ResponseEntity.ok().header(HttpHeaders.CONTENT_TYPE, "application/json")
+										  .body(new FolderEntity());
 			} catch(StorageException e) {
-				response += e.getMessage() + "'}";
+				if(e.getMessage().equals("Folder " + folderPath + " already exists."))
+					return new ResponseEntity<>(HttpStatus.CONFLICT);
+				else
+					return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 			}
 		}
-		
-		return response;
 	}
 	
 	@DeleteMapping(value="/rm", produces="application/json")
 	@ResponseBody
-	public String deleteFolder(@RequestParam("path") String folderPath) {
-		String response = "{'response':'";
+	public ResponseEntity<FolderEntity> deleteFolder(@RequestParam("path") String folderPath) {
 		
 		if(folderPath == null || folderPath.isEmpty())
-			response += "Can't delete folder with empty path.'}";
+			return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
 		else {
 			try {
 				this.navigationService.deleteFolder(folderPath);
-				response += "Folder " + folderPath + " was deleted!'}";
-			} catch(Exception e) {
-				response += e.getMessage();
+				return new ResponseEntity<>(HttpStatus.OK);
+			} catch(StorageFileNotFoundException e) {
+				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+			} catch(StorageException e) {
+				return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 			}
 		}
-		
-		return response;
 	}
 }

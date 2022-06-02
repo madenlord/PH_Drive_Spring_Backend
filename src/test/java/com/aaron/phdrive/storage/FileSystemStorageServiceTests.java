@@ -79,14 +79,6 @@ public class FileSystemStorageServiceTests {
 	}
 	
 	@Test
-	@DisplayName("Saving empty file should throw StorageException")
-	public void saveEmptyFile() {
-		assertThrows(StorageException.class, () -> service.store(
-				new MockMultipartFile(MULTIPARTFILE_NAME, "foo.txt",
-				MediaType.TEXT_PLAIN_VALUE, "".getBytes()), FILE_PATH));
-	}
-	
-	@Test
 	public void deleteExistent() {
 		String filename = "foo.txt";
 		service.store(new MockMultipartFile(filename, filename, MediaType.TEXT_PLAIN_VALUE,

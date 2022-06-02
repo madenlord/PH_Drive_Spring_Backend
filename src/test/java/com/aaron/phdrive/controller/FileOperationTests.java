@@ -20,11 +20,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import com.aaron.phdrive.service.StorageFileNotFoundException;
 import com.aaron.phdrive.service.StorageService;
+import com.aaron.phdrive.storage.StorageException;
 import com.aaron.phdrive.storage.StorageProperties;
 
 @AutoConfigureMockMvc
@@ -88,7 +91,7 @@ public class FileOperationTests {
 		
 		try {
 			this.mvc.perform(get(GET_URL).param("file", FILENAME + "t"))
-					.andExpect(status().is4xxClientError());
+					.andExpect(status().isNotFound());
 		} catch(Exception e) {
 			assertEquals(e.getCause().getClass(), StorageFileNotFoundException.class);
 		}
@@ -99,7 +102,8 @@ public class FileOperationTests {
 		this.mvc.perform(multipart(POST_URL).file(multipartFile).param("path", ROOT_PATH))
 				.andExpect(status().is2xxSuccessful())
 				.andExpect(content().json(
-						"{'response':'" + FILENAME + " successfully uploaded!'}"
+						"{'filename':'" + FILENAME + "'," + 
+						"'path': '" + ROOT_PATH + "'}"
 						));
 		
 		then(this.storageService).should().store(multipartFile, ROOT_PATH);
@@ -115,13 +119,27 @@ public class FileOperationTests {
 	}
 	
 	@Test
+	@DisplayName("Should fail due to server file storage service error")
+	public void shouldFailUploadOperation() throws Exception {
+		doThrow(StorageException.class).when(this.storageService)
+									   .store(multipartFile, PATH);
+		MvcResult result = null;
+		try {
+			result = this.mvc.perform(multipart(POST_URL).file(multipartFile).param("path", PATH))
+							 .andExpect(status().is5xxServerError())
+							 .andReturn();
+		} catch(Exception e) {
+			assertEquals(StorageException.class, e.getCause().getClass());
+			assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getResponse().getStatus());
+		}
+	}
+	
+	@Test
 	public void shouldDeleteFile() throws Exception {
 		doNothing().when(this.storageService).delete(FILENAME);
 		
 		this.mvc.perform(delete(DELETE_URL).param("file", FILENAME))
-			.andExpect(status().is2xxSuccessful())
-			.andExpect(content().json(
-					"{'response':'" + FILENAME + " successfully deleted!'}"));
+			.andExpect(status().is2xxSuccessful());
 	}
 	
 	@Test
@@ -129,13 +147,14 @@ public class FileOperationTests {
 	public void shouldFailAtDeletingNonExistingFile() {
 		doThrow(StorageFileNotFoundException.class).when(this.storageService).delete(FILENAME);
 		
+		MvcResult result = null;
 		try  {
-			this.mvc.perform(delete(DELETE_URL).param("file", FILENAME))
-			.andExpect(status().is2xxSuccessful())
-			.andExpect(content().json(
-					"{'response':'" + FILENAME + " could not be deleted.'}"));
+			result = this.mvc.perform(delete(DELETE_URL).param("file", FILENAME))
+							 .andExpect(status().is4xxClientError())
+							 .andReturn();
 		} catch(Exception e) {
-			assertEquals(e.getCause().getClass(), StorageFileNotFoundException.class);
+			assertEquals(StorageFileNotFoundException.class, e.getCause().getClass());
+			assertEquals(HttpStatus.NOT_FOUND, result.getResponse().getStatus());
 		}
 		
 	}
