@@ -44,15 +44,16 @@ public class FileController {
 	
 	@PostMapping(value="/upload", produces="application/json")
 	@ResponseBody
-	public FileEntity handleFileUpload(@RequestParam("file") MultipartFile file,
+	public ResponseEntity<FileEntity> handleFileUpload(@RequestParam("file") MultipartFile file,
 			@RequestParam("path") String path) {
 		
 		if(path == null || path.isEmpty()) path = "/";
 		try {
 			storageService.store(file, path);
-			return new FileEntity(file.getOriginalFilename(), path);
+			return ResponseEntity.ok().header(HttpHeaders.CONTENT_TYPE, "application/json")
+					.body(new FileEntity(file.getOriginalFilename(), path));
 		} catch(StorageException e) {
-			return new FileEntity();
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
 	}
 	
