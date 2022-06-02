@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -139,9 +140,7 @@ public class FileOperationTests {
 		doNothing().when(this.storageService).delete(FILENAME);
 		
 		this.mvc.perform(delete(DELETE_URL).param("file", FILENAME))
-			.andExpect(status().is2xxSuccessful())
-			.andExpect(content().json(
-					"{'response':'" + FILENAME + " successfully deleted!'}"));
+			.andExpect(status().is2xxSuccessful());
 	}
 	
 	@Test
@@ -149,13 +148,14 @@ public class FileOperationTests {
 	public void shouldFailAtDeletingNonExistingFile() {
 		doThrow(StorageFileNotFoundException.class).when(this.storageService).delete(FILENAME);
 		
+		MvcResult result = null;
 		try  {
-			this.mvc.perform(delete(DELETE_URL).param("file", FILENAME))
-			.andExpect(status().is2xxSuccessful())
-			.andExpect(content().json(
-					"{'response':'" + FILENAME + " could not be deleted.'}"));
+			result = this.mvc.perform(delete(DELETE_URL).param("file", FILENAME))
+							 .andExpect(status().is4xxClientError())
+							 .andReturn();
 		} catch(Exception e) {
-			assertEquals(e.getCause().getClass(), StorageFileNotFoundException.class);
+			assertEquals(StorageFileNotFoundException.class, e.getCause().getClass());
+			assertEquals(HttpStatus.NOT_FOUND, result.getResponse().getStatus());
 		}
 		
 	}

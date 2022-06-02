@@ -58,18 +58,14 @@ public class FileController {
 	
 	@DeleteMapping("/delete")
 	@ResponseBody
-	public String deleteFile(@RequestParam("file") String filepath) {
-		
-		String response = "{'response':'";
-		
+	public ResponseEntity<String> deleteFile(@RequestParam("file") String filepath) {
+	
 		try {
 			storageService.delete(filepath);
-			response += filepath + " successfully deleted!'}";
+			return new ResponseEntity<>(HttpStatus.OK);
 		} catch (Exception e) {
 			System.out.println("The file " + filepath + "couldn't be deleted");
-			response += filepath + " could not be deleted.'}";
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
-		
-		return response;
 	}
 }
