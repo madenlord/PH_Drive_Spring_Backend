@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -105,11 +106,14 @@ public class DirOperationTests {
 		given(this.navigationService.getFolderContent(eq(ERROR_PATH), ArgumentMatchers.any(FolderEntity.class)))
 			.willThrow(StorageFileNotFoundException.class);
 		
+		MvcResult result = null;
 		try {
-			this.mvc.perform(get(GET_URL).param("path", ERROR_PATH))
-					.andExpect(status().is5xxServerError());
+			result = this.mvc.perform(get(GET_URL).param("path", ERROR_PATH))
+					.andExpect(status().is4xxClientError())
+					.andReturn();
 		} catch(Exception e) {
 			assertEquals(StorageFileNotFoundException.class, e.getCause().getClass());
+			assertEquals(HttpStatus.NOT_FOUND, result.getResponse().getStatus());
 		}		
 	}
 	
