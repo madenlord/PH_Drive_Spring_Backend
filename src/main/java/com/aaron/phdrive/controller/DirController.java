@@ -64,20 +64,19 @@ public class DirController {
 	
 	@DeleteMapping(value="/rm", produces="application/json")
 	@ResponseBody
-	public String deleteFolder(@RequestParam("path") String folderPath) {
-		String response = "{'response':'";
+	public ResponseEntity<FolderEntity> deleteFolder(@RequestParam("path") String folderPath) {
 		
 		if(folderPath == null || folderPath.isEmpty())
-			response += "Can't delete folder with empty path.'}";
+			return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
 		else {
 			try {
 				this.navigationService.deleteFolder(folderPath);
-				response += "Folder " + folderPath + " was deleted!'}";
-			} catch(Exception e) {
-				response += e.getMessage();
+				return new ResponseEntity<>(HttpStatus.OK);
+			} catch(StorageFileNotFoundException e) {
+				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+			} catch(StorageException e) {
+				return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 			}
 		}
-		
-		return response;
 	}
 }

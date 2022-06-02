@@ -181,10 +181,6 @@ public class DirOperationTests {
 		MvcResult result = this.mvc.perform(delete(DELETE_URL).param("path", DIR_PATH))
 					.andExpect(status().isOk())
 					.andReturn();
-		
-		assertEquals("application/json", result.getResponse().getContentType());
-		assertEquals("{'response':'Folder " + DIR_PATH + " was deleted!'}", 
-				result.getResponse().getContentAsString());
 	}
 	
 	@Test
@@ -192,12 +188,15 @@ public class DirOperationTests {
 		given(this.navigationService.deleteFolder(ERROR_PATH))
 			.willThrow(StorageFileNotFoundException.class);
 		
+		MvcResult result = null;
 		try {
-			this.mvc.perform(delete(DELETE_URL).param("path", ERROR_PATH))
-					.andExpect(status().isOk());
+			result = this.mvc.perform(delete(DELETE_URL).param("path", ERROR_PATH))
+						     .andExpect(status().is4xxClientError())
+						     .andReturn();
 		} catch(Exception e) {
 			assertEquals(StorageFileNotFoundException.class, e.getCause().getClass());
-			assertEquals("{'response':'"+ERROR_PATH+" doesn't exist.`}", e.getMessage());
+			assertEquals(ERROR_PATH + " doesn't exist.", e.getMessage());
+			assertEquals(HttpStatus.NOT_FOUND, result.getResponse().getStatus());
 		}
 	}
 	
@@ -206,12 +205,15 @@ public class DirOperationTests {
 		given(this.navigationService.deleteFolder(DIR_PATH))
 			.willThrow(StorageException.class);
 		
+		MvcResult result = null;
 		try {
-			this.mvc.perform(delete(DELETE_URL).param("path", DIR_PATH))
-					.andExpect(status().isOk());
+			result = this.mvc.perform(delete(DELETE_URL).param("path", DIR_PATH))
+						     .andExpect(status().is5xxServerError())
+						     .andReturn();
 		} catch(Exception e) {
 			assertEquals(StorageException.class, e.getCause().getClass());
-			assertEquals("{'response':'Failed to delete " + DIR_PATH + " recursively.'}", e.getMessage());
+			assertEquals("Failed to delete " + DIR_PATH + " recursively.", e.getMessage());
+			assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getResponse().getStatus());
 		}
 	}
 }
