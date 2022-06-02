@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.aaron.phdrive.entity.FileEntity;
 import com.aaron.phdrive.service.StorageFileNotFoundException;
 import com.aaron.phdrive.service.StorageService;
 import com.aaron.phdrive.storage.StorageException;
@@ -41,23 +42,18 @@ public class FileController {
 		
 	}
 	
-	@PostMapping("/upload")
+	@PostMapping(value="/upload", produces="application/json")
 	@ResponseBody
-	public String handleFileUpload(@RequestParam("file") MultipartFile file,
+	public FileEntity handleFileUpload(@RequestParam("file") MultipartFile file,
 			@RequestParam("path") String path) {
-
-		String response = "{'response':'";
 		
 		if(path == null || path.isEmpty()) path = "/";
 		try {
 			storageService.store(file, path);
-			response += file.getOriginalFilename() + " successfully uploaded!'}";
+			return new FileEntity(file.getOriginalFilename(), path);
 		} catch(StorageException e) {
-			System.out.println("The introduced path doesn't exist!");
-			response += file.getOriginalFilename() + " could not be uploaded'}";
+			return new FileEntity();
 		}
-		
-		return response;
 	}
 	
 	@DeleteMapping("/delete")

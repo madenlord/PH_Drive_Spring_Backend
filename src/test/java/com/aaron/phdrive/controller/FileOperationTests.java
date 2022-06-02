@@ -22,9 +22,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import com.aaron.phdrive.service.StorageFileNotFoundException;
 import com.aaron.phdrive.service.StorageService;
+import com.aaron.phdrive.storage.StorageException;
 import com.aaron.phdrive.storage.StorageProperties;
 
 @AutoConfigureMockMvc
@@ -99,7 +101,8 @@ public class FileOperationTests {
 		this.mvc.perform(multipart(POST_URL).file(multipartFile).param("path", ROOT_PATH))
 				.andExpect(status().is2xxSuccessful())
 				.andExpect(content().json(
-						"{'response':'" + FILENAME + " successfully uploaded!'}"
+						"{'filename':'" + FILENAME + "'," + 
+						"'path': '" + ROOT_PATH + "'}"
 						));
 		
 		then(this.storageService).should().store(multipartFile, ROOT_PATH);
@@ -112,6 +115,23 @@ public class FileOperationTests {
 				.andExpect(status().is2xxSuccessful());
 		
 		then(this.storageService).should().store(multipartFile, PATH);
+	}
+	
+	@Test
+	@DisplayName("Should fail due to server file storage service error")
+	public void shouldFailUploadOperation() throws Exception {
+		doThrow(StorageException.class).when(this.storageService)
+									   .store(multipartFile, PATH);
+		MvcResult result = null;
+		try {
+			result = this.mvc.perform(multipart(POST_URL).file(multipartFile).param("path", PATH))
+							 .andExpect(status().is2xxSuccessful())
+							 .andReturn();
+		} catch(Exception e) {
+			assertEquals(StorageException.class, e.getCause().getClass());
+			assertEquals("application/json", result.getResponse().getContentType());
+			assertEquals("{'filename':'','path':''}", result.getResponse().getContentAsString());
+		}
 	}
 	
 	@Test
