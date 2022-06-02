@@ -88,7 +88,7 @@ public class FileOperationTests {
 		
 		try {
 			this.mvc.perform(get(GET_URL).param("file", FILENAME + "t"))
-					.andExpect(status().is4xxClientError());
+					.andExpect(status().isNotFound());
 		} catch(Exception e) {
 			assertEquals(e.getCause().getClass(), StorageFileNotFoundException.class);
 		}
