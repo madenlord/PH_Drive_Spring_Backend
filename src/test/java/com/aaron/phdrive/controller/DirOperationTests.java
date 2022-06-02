@@ -164,6 +164,16 @@ public class DirOperationTests {
 	}
 	
 	@Test
+	@DisplayName("Should fail when creating folder with empty path.")
+	public void shouldFailtAtCreatingEmptyFolder() throws Exception {
+		MvcResult result = this.mvc.perform(post(POST_URL).param("path", ""))
+								   .andExpect(status().is4xxClientError())
+								   .andReturn();
+		
+		assertEquals(406, result.getResponse().getStatus());
+	}
+	
+	@Test
 	public void shouldDeleteFolder() throws Exception {
 		given(this.navigationService.deleteFolder(DIR_PATH))
 			.willReturn(true);
