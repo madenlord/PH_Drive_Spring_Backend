@@ -126,20 +126,40 @@ public class DirOperationTests {
 				.andReturn();
 		
 		assertEquals("application/json", result.getResponse().getContentType());
-		assertEquals("{'response':'Folder "+SUBDIR_PATH+" was created!'}", 
-					result.getResponse().getContentAsString());
+		assertEquals("{\"dirs\":[],\"files\":[]}", result.getResponse().getContentAsString());
 	}
 	
 	@Test
 	public void shouldFailtAtCreatingExistingFolder() {
-		doThrow(StorageException.class).when(this.navigationService).createFolder(SUBDIR_PATH);
+		doThrow(new StorageException("Folder " + SUBDIR_PATH + " already exists."))
+				.when(this.navigationService).createFolder(SUBDIR_PATH);
 		
+		MvcResult result = null;
 		try {
-			this.mvc.perform(post(POST_URL).param("path", SUBDIR_PATH))
-					.andExpect(status().isOk());
+			result = this.mvc.perform(post(POST_URL).param("path", SUBDIR_PATH))
+							  .andExpect(status().is4xxClientError())
+							  .andReturn();
 		} catch(Exception e) {
 			assertEquals(StorageException.class, e.getCause().getClass());
 			assertEquals("Folder " + SUBDIR_PATH + " already exists", e.getMessage());
+			assertEquals(HttpStatus.CONFLICT, result.getResponse().getStatus());
+		}
+	}
+	
+	@Test
+	public void shouldFailAtCreatingFolder() {
+		doThrow(new StorageException("Failed to create folder " + SUBDIR_PATH + "."))
+				.when(this.navigationService).createFolder(SUBDIR_PATH);
+
+		MvcResult result = null;
+		try {
+			result = this.mvc.perform(post(POST_URL).param("path", SUBDIR_PATH))
+							  .andExpect(status().is5xxServerError())
+							  .andReturn();
+		} catch(Exception e) {
+			assertEquals(StorageException.class, e.getCause().getClass());
+			assertEquals("Failed to create folder " + SUBDIR_PATH + ".", e.getMessage());
+			assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getResponse().getStatus());
 		}
 	}
 	

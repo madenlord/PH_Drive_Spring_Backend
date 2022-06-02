@@ -44,22 +44,22 @@ public class DirController {
 	
 	@PostMapping(value="/mkdir", produces="application/json")
 	@ResponseBody
-	public String createFolder(@RequestParam("path") String folderPath) {
-		
-		String response = "{'response':'";
+	public ResponseEntity<FolderEntity> createFolder(@RequestParam("path") String folderPath) {
 		
 		if(folderPath == null || folderPath.isEmpty()) 
-			response += "Can't create folder with empty path.'}";
+			return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
 		else {
 			try {
 				this.navigationService.createFolder(folderPath);
-				response += "Folder " + folderPath + " was created!'}";
+				return ResponseEntity.ok().header(HttpHeaders.CONTENT_TYPE, "application/json")
+										  .body(new FolderEntity());
 			} catch(StorageException e) {
-				response += e.getMessage() + "'}";
+				if(e.getMessage().equals("Folder " + folderPath + " already exists."))
+					return new ResponseEntity<>(HttpStatus.CONFLICT);
+				else
+					return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 			}
 		}
-		
-		return response;
 	}
 	
 	@DeleteMapping(value="/rm", produces="application/json")
