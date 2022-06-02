@@ -53,7 +53,7 @@ public class FileController {
 			return ResponseEntity.ok().header(HttpHeaders.CONTENT_TYPE, "application/json")
 					.body(new FileEntity(file.getOriginalFilename(), path));
 		} catch(StorageException e) {
-			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 	

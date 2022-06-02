@@ -126,11 +126,11 @@ public class FileOperationTests {
 		MvcResult result = null;
 		try {
 			result = this.mvc.perform(multipart(POST_URL).file(multipartFile).param("path", PATH))
-							 .andExpect(status().is4xxClientError())
+							 .andExpect(status().is5xxServerError())
 							 .andReturn();
 		} catch(Exception e) {
 			assertEquals(StorageException.class, e.getCause().getClass());
-			assertEquals(HttpStatus.NOT_FOUND, result.getResponse().getStatus());
+			assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getResponse().getStatus());
 		}
 	}
 	
