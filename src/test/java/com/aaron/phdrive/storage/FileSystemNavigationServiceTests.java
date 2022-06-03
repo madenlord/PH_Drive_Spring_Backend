@@ -59,16 +59,16 @@ public class FileSystemNavigationServiceTests {
 	@Test
 	public void shouldGetFolderContent() {
 		FolderEntity folderContent = new FolderEntity();
-		List<Path> dirs  = new ArrayList<>();
-		List<Path> files = new ArrayList<>();
+		List<String> dirs  = new ArrayList<>();
+		List<String> files = new ArrayList<>();
 		
 		this.service.createFolder(DIR_PATH);
 		this.service.createFolder(SUBDIR_PATH);
 		this.storageService.store(new MockMultipartFile("file", FILE_NAME,
 				MediaType.TEXT_PLAIN_VALUE, "Hello, World!".getBytes()), DIR_PATH);
 
-		dirs.add(this.service.load(SUBDIR_PATH));
-		files.add(this.service.load(FILE_PATH));
+		dirs.add(this.service.load(SUBDIR_PATH).getFileName().toString());
+		files.add(this.service.load(FILE_PATH).getFileName().toString());
 		
 		folderContent = this.service.getFolderContent(DIR_PATH, folderContent);
 		
