@@ -34,7 +34,7 @@ public class DirController {
 		
 		FolderEntity folderInfo = new FolderEntity();
 		
-		if(folderPath == null || folderPath.isEmpty()) folderPath = "/";
+		if(folderPath == null || folderPath.isEmpty() || folderPath.equals("/")) folderPath = ".";
 		try {
 			folderInfo = this.navigationService.getFolderContent(folderPath, folderInfo);
 			return ResponseEntity.ok().header(HttpHeaders.CONTENT_TYPE, "application/json")
