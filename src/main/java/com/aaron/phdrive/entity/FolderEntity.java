@@ -7,16 +7,44 @@ import java.util.List;
 
 public class FolderEntity implements Serializable {
 
+	private String path;
 	private List<String> dirs = new ArrayList<>();
 	private List<String> files = new ArrayList<>();
 	
 	public FolderEntity() {}
 	
-	public FolderEntity(List<Path> dirs, List<Path> files) {
+	public FolderEntity(String path) {
+		this.setPath(path);
+	}
+	
+	public FolderEntity(Path path) {
+		this.setPath(path);
+	}
+	
+	public FolderEntity(String path, List<Path> dirs, List<Path> files) {
+		this.setPath(path);
 		this.setDirs(dirs);
 		this.setFiles(files);
 	}
 	
+	public FolderEntity(Path path, List<Path> dirs, List<Path> files) {
+		this.setPath(path);
+		this.setDirs(dirs);
+		this.setFiles(files);
+	}
+	
+	public String getPath() {
+		return path;
+	}
+
+	public void setPath(String path) {
+		this.path = path;
+	}
+	
+	public void setPath(Path path) {
+		this.path = this.getLastChild(path);
+	}
+
 	public List<String> getDirs() {
 		return this.dirs;
 	}
