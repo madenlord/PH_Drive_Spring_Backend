@@ -84,6 +84,7 @@ public class DirOperationTests {
 		subFolders.add(Paths.get(STORAGE_LOCATION).resolve(SUBDIR_PATH));
 		subFiles.add(Paths.get(STORAGE_LOCATION).resolve(FILE_PATH));
 		
+		TEST_FOLDER.setPath(DIR_PATH);
 		TEST_FOLDER.setDirs(subFolders);
 		TEST_FOLDER.setFiles(subFiles);
 	}
@@ -126,7 +127,8 @@ public class DirOperationTests {
 				.andReturn();
 		
 		assertEquals("application/json", result.getResponse().getContentType());
-		assertEquals("{\"dirs\":[],\"files\":[]}", result.getResponse().getContentAsString());
+		assertEquals("{\"path\":\"" + SUBDIR_PATH + "\",\"dirs\":[],\"files\":[]}", 
+					 result.getResponse().getContentAsString());
 	}
 	
 	@Test

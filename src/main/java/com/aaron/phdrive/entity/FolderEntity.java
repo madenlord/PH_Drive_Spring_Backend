@@ -7,37 +7,69 @@ import java.util.List;
 
 public class FolderEntity implements Serializable {
 
-	private List<Path> dirs = new ArrayList<>();
-	private List<Path> files = new ArrayList<>();
+	private String path;
+	private List<String> dirs = new ArrayList<>();
+	private List<String> files = new ArrayList<>();
 	
 	public FolderEntity() {}
 	
-	public FolderEntity(List<Path> dirs, List<Path> files) {
-		this.dirs  = dirs;
-		this.files = files;
+	public FolderEntity(String path) {
+		this.setPath(path);
 	}
 	
-	public List<Path> getDirs() {
+	public FolderEntity(Path path) {
+		this.setPath(path);
+	}
+	
+	public FolderEntity(String path, List<Path> dirs, List<Path> files) {
+		this.setPath(path);
+		this.setDirs(dirs);
+		this.setFiles(files);
+	}
+	
+	public FolderEntity(Path path, List<Path> dirs, List<Path> files) {
+		this.setPath(path);
+		this.setDirs(dirs);
+		this.setFiles(files);
+	}
+	
+	public String getPath() {
+		return path;
+	}
+
+	public void setPath(String path) {
+		this.path = path;
+	}
+	
+	public void setPath(Path path) {
+		this.path = this.getLastChild(path);
+	}
+
+	public List<String> getDirs() {
 		return this.dirs;
 	}
 	
 	public void setDirs(List<Path> dirs) {
-		this.dirs = dirs;
+		dirs.forEach(dir -> this.dirs.add(this.getLastChild(dir)));
 	}
 	
 	public void addDir(Path dir) {
-		this.dirs.add(dir);
+		this.dirs.add(this.getLastChild(dir));
 	}
 	
-	public List<Path> getFiles() {
+	public List<String> getFiles() {
 		return this.files;
 	}
 	
 	public void setFiles(List<Path> files) {
-		this.files = files;
+		files.forEach(file -> this.files.add(this.getLastChild(file)));
 	}
 	
 	public void addFile(Path file) {
-		this.files.add(file);
+		this.files.add(this.getLastChild(file));
+	}
+	
+	private String getLastChild(Path path) {
+		return path.getFileName().toString();
 	}
 }

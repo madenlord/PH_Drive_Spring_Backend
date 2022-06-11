@@ -36,6 +36,7 @@ public class DirController {
 		
 		if(folderPath == null || folderPath.isEmpty() || folderPath.equals("/")) folderPath = ".";
 		try {
+			folderInfo.setPath(folderPath);
 			folderInfo = this.navigationService.getFolderContent(folderPath, folderInfo);
 			return ResponseEntity.ok().header(HttpHeaders.CONTENT_TYPE, "application/json")
 									  .body(folderInfo);
@@ -54,7 +55,7 @@ public class DirController {
 			try {
 				this.navigationService.createFolder(folderPath);
 				return ResponseEntity.ok().header(HttpHeaders.CONTENT_TYPE, "application/json")
-										  .body(new FolderEntity());
+										  .body(new FolderEntity(folderPath));
 			} catch(StorageException e) {
 				if(e.getMessage().equals("Folder " + folderPath + " already exists."))
 					return new ResponseEntity<>(HttpStatus.CONFLICT);
