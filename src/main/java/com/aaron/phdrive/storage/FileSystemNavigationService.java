@@ -68,7 +68,7 @@ public class FileSystemNavigationService implements NavigationService {
 	public FolderEntity getFolderContent(String folderPath, FolderEntity folder) {
 		Path path = this.load(folderPath);
 		
-		try(Stream<Path> folderContent = Files.walk(path)) {
+		try(Stream<Path> folderContent = Files.walk(path,1)) {
 			folderContent.forEach(element -> {
 				if(Files.isRegularFile(element)) folder.addFile(element);
 				else if(!(path.equals(element)))folder.addDir(element);
